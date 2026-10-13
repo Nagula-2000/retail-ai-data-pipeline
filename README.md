@@ -45,10 +45,28 @@ Load `outputs/clean_sales.csv` into a SQL table named `clean_sales` and run `sql
 
 ## Planned enhancements
 
-- Larger synthetic multi-store dataset and quality monitoring
 - Incremental ingestion and scheduling
 - Inventory history and stock-out prediction
 
 ## Portfolio note
 
 All records are synthetic; no employer or customer data is included.
+
+
+## Synthetic 500-store data and monitoring
+
+Generate a larger reproducible synthetic dataset, process it, and validate the results:
+
+```bash
+python -m src.generate_data --output data/synthetic_sales.csv --rows 10000 --stores 500
+python -m src.pipeline --input data/synthetic_sales.csv --output outputs
+python -m src.quality_report --input data/synthetic_sales.csv --output outputs
+pytest -q
+streamlit run dashboard/app.py
+```
+
+The quality command writes `outputs/quality_report.json` and exits with a nonzero status if checks fail. The default invalid-row threshold is 5%; adjust it using `--max-invalid-rate 0.10` for 10%. Duplicate transactions are counted separately from invalid rows.
+
+A GitHub Actions workflow in `.github/workflows/pipeline-monitor.yml` is configured for weekly checks and manual runs. Inspect the repository's **Actions** tab for actual execution status. GitHub may delay scheduled workflows or disable them on inactive repositories.
+
+The generated CSV and pipeline outputs are local working files, not committed datasets. Run the commands above to produce them.
